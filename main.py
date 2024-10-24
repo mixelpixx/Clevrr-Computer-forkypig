@@ -1,33 +1,8 @@
-from dotenv import load_dotenv
-from langchain_openai import AzureChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-from agent import create_clevrr_agent
-from prompt import prompt
+from utils.agent import create_clevrr_agent, models
+from utils.prompt import prompt
 
 import argparse
-import os 
 from tkinter import *
-from datetime import datetime
-
-_ = load_dotenv()
-os.environ['OPENAI_API_TYPE'] = 'azure'
-
-openai = AzureChatOpenAI(
-    openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-    azure_deployment="gpt-4o",
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-)
-
-gemini = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro-latest",
-    google_api_key="AIzaSyC8hyTcHxEEhRRmcQSynMoXqDNtc27Lme4",
-)
-
-models = {
-    "gemini": gemini,
-    "openai": openai
-}
 
 
 def main():
@@ -98,7 +73,7 @@ def main():
     send = Button(root, text="Send", font=FONT_BOLD, bg=BG_GRAY,
                 command=send).grid(row=2, column=1)
 
-    root.attributes('-topmost', True)
+    root.attributes('-topmost', bool(args.float_ui))
     root.mainloop()
 
 if __name__ == "__main__":
