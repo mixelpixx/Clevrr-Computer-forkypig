@@ -1,11 +1,14 @@
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.tools import tool
-from utils.agent import models
+
+from utils.contants import MODELS
+
 from PIL import Image, ImageDraw, ImageFont
 import pyautogui as pg
 import base64
-import os
+
+pg.PAUSE = 2
 
 def get_ruled_screenshot():
 
@@ -64,11 +67,12 @@ def get_screen_info(question: str) -> dict:
             messages = [
                 SystemMessage(
                 content="""You are a Computer agent that is responsible for answering questions based on the input provided to you. You will have access to the screenshot of the current screen of the user along with a grid marked with true coordinates of the screen. The size of the screen is 1920 x 1080 px.
+                        ONLY rely on the coordinates marked in the screen. DO NOT create an assumption of the coordinates. 
                         Here's how you can help:
-                        1. Find out coordinates of a specific thing. These coordinates will be passed to PyAutoGUI Agent to perform further tasks. 
+                        1. Find out coordinates of a specific thing. You have to be super specific about the coordinates. These coordinates will be passed to PyAutoGUI Agent to perform further tasks. Refer the grid line to get the accurate coordinates.
                         2. Give information on the contents of the screen.
                         3. Analyse the screen to give instructions to perform further steps.
-                        You always have to be 100% confident in your answer and you know everything about the screen of the user
+                        
                     """
                 ),
                 HumanMessage(
@@ -84,7 +88,7 @@ def get_screen_info(question: str) -> dict:
                     ]
                 )
             ]
-            image_model = models["gemini"]
+            image_model = MODELS["gemini"]
             response = image_model.invoke(messages)
             return response.content
         
