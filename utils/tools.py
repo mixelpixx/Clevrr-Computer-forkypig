@@ -1,6 +1,8 @@
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.tools import tool
+import pyperclip
+import time
 
 from utils.contants import MODELS
 
@@ -10,8 +12,51 @@ import base64
 
 pg.PAUSE = 2
 
-def get_ruled_screenshot():
+class ClipboardAction(BaseModel):
+    action: str = Field(description="The clipboard action to perform (copy/paste/get)")
+    text: str = Field(description="The text to copy (if action is copy)", default="")
 
+@tool(args_schema=ClipboardAction)
+def manage_clipboard(action_input: ClipboardAction) -> str:
+    """Tool to manage clipboard operations (copy/paste/get)"""
+    try:
+        if action_input.action == "copy":
+            pyperclip.copy(action_input.text)
+            return f"Copied text to clipboard: {action_input.text}"
+        elif action_input.action == "paste":
+            return pyperclip.paste()
+        elif action_input.action == "get":
+            return pyperclip.paste()
+        else:
+            return "Invalid clipboard action"
+    except Exception as e:
+        return f"Clipboard error: {str(e)}"
+
+class WindowAction(BaseModel):
+    action: str = Field(description="Window action to perform (maximize/minimize/restore)")
+    window_name: str = Field(description="Name of the window to act on")
+
+@tool(args_schema=WindowAction)
+def manage_window(window_input: WindowAction) -> str:
+    """Tool to manage window operations (maximize/minimize/restore)"""
+    try:
+        window = pg.getWindowsWithTitle(window_input.window_name)
+        if not window:
+            return f"Window '{window_input.window_name}' not found"
+        
+        window = window[0]
+        if window_input.action == "maximize":
+            window.maximize()
+        elif window_input.action == "minimize":
+            window.minimize()
+        elif window_input.action == "restore":
+            window.restore()
+        
+        return f"Successfully performed {window_input.action} on window '{window_input.window_name}'"
+    except Exception as e:
+        return f"Window management error: {str(e)}"
+
+def get_ruled_screenshot():
     image = pg.screenshot()
     # Get the image dimensions
     width, height = image.size
@@ -52,7 +97,7 @@ def get_ruled_screenshot():
     combined = Image.alpha_composite(image.convert("RGBA"), overlay)
     combined.save("screenshot.png")
 
-    from langchain.pydantic_v1 import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field
 
 class ScreenInfo(BaseModel):
     query: str = Field(description="should be a question about the screenshot of the current screen. Should always be in text.")
